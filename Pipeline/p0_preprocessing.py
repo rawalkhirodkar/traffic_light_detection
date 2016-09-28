@@ -1,6 +1,6 @@
 import time, cv2, copy, numpy as np
 
-def preprocess(image):
+def preprocess(image, clipLimit, tileGridSize):
 	start=time.time()
         img=copy.copy(image)
         height, width, channels = img.shape 
@@ -12,8 +12,10 @@ def preprocess(image):
         clahe = cv2.createCLAHE(clipLimit=7.0, tileGridSize=(8,8)) # Adaptive histogram equilization
         clahe = clahe.apply(r)
         img = cv2.merge((b,g,clahe))
-	print "Preprocessing: " , time.time() - start, " ms" 
+	#print "Preprocessing: " , time.time() - start, " s" 
         return image,img
+
+
 
 
 
