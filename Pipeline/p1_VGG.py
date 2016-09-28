@@ -1,12 +1,12 @@
 import time
-start=time.time()
+
 from convnetskeras.convnets import preprocess_image_batch, convnet
 from convnetskeras.imagenet_tool import synset_to_dfs_ids
 from keras.optimizers import SGD
 import numpy as np
 import cv2
 
-print "Theano initialization: " , time.time() - start, " s"
+
 
 def initialize_vgg():
     start=time.time()

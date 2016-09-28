@@ -47,7 +47,7 @@ def heuristics(contours, original_img):
         pad=int(fraction*w*h)
         temp=original_img[y:y+2*h,x-pad/3:x+h+pad/3]
         if area>20 and len(approx) > 3 and area*2.5 > w*h and w < 2 * h and h < 5 * w:
-            accepted.append(temp)
+            accepted.append(cnt)
             cv2.rectangle(annotated_image, (x,y), (x+w,y+h),(0,255,0), 2)
         else:
             rejected.append(temp)

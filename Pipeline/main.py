@@ -1,80 +1,89 @@
-from p0_preprocessing import *
+from pipeline import *
 from p1_VGG import *
-from p2_colorthresholding import *
-from collections import *
-import cv2
-import numpy as np
+import pickle
 import matplotlib.pyplot as plt
 
+Test = pickle.load( open( "validation_set.p", "rb" ) )
 
-
-def plot_figures(figures, nrows = 1, ncols=1):
-    """Plot a dictionary of figures.
-
-    Parameters
-    ----------
-    figures : <title, figure> dictionary
-    ncols : number of columns of subplots wanted in the display
-    nrows : number of rows of subplots wanted in the figure
-    """
-
-    fig, axeslist = plt.subplots(ncols=ncols, nrows=nrows)
-    for ind,title in zip(range(len(figures)), figures):
-    	axeslist=np.ravel(axeslist)
-        axeslist[ind].imshow(figures[title], cmap=plt.gray())
-        axeslist[ind].set_title(title)
-        axeslist[ind].set_axis_off()
-    #plt.tight_layout() # optional
-    plt.show()
-
-
-
-# Initialization
-
-filename="test.jpg"
+plt.ion()
+f, axarr = plt.subplots(2,2)
 ids,model_heatmap = initialize_vgg()
 
-######################## Stage 0
+f=open("dump.txt","wb")
+
+def create_model():
+    nb_classes = 2
+
+    # input image dimensions
+    img_rows, img_cols = 32, 32
+    img_channels = 3
+    # Create the model
+    model = Sequential()
+    model.add(Convolution2D(32, 3, 3, input_shape=(3, 32, 32), activation='relu', border_mode='same'))
+    model.add(Dropout(0.2))
+    model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Convolution2D(64, 3, 3, activation='relu', border_mode='same'))
+    model.add(Dropout(0.2))
+    model.add(Convolution2D(64, 3, 3, activation='relu', border_mode='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Convolution2D(128, 3, 3, activation='relu', border_mode='same'))
+    model.add(Dropout(0.2))
+    model.add(Convolution2D(128, 3, 3, activation='relu', border_mode='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Flatten())
+    model.add(Dropout(0.2))
+    model.add(Dense(1024, activation='relu', W_constraint=maxnorm(3)))
+    model.add(Dropout(0.2))
+    model.add(Dense(512, activation='relu', W_constraint=maxnorm(3)))
+    model.add(Dropout(0.2))
+    model.add(Dense(nb_classes, activation='softmax'))
+
+    return model
+
+tm=time.time()
+print "Loading model....",
+
+model = create_model()
+model.load_weights("new_traffic_light_weights.h5")
+print "Took ", time.time()-tm, "s"
 
 
 
-t=time.time()
-
-original_image, processed_image = preprocess(cv2.imread(filename), 16.0, (128,128))
-processed_image_BGR=cv2.cvtColor(processed_image, cv2.COLOR_HSV2BGR)
-
-print "Stage0: Preprocessing: ",time.time()-t," s"
-t=time.time()
-
-######################## Stage 1
-
-height, width, channels = original_image.shape
-
-heatmap =  generate_heatmap(filename,model_heatmap,ids,width,height,128)  # Takes original image as input, not the preprocessed one
 
 
-print "Stage1: VGG Heatmap: ",time.time()-t," s"
-t=time.time()
+Total=0
+Rec=0
+Fal=0
+count=0
 
-######################## Stage 2
+for i in Test.keys():
+    total_time, original_image,heatmap,thresh,final_annotated_image,Total_Lights,Recognized,Falsepos=run_pipeline(i,Test[i],ids,model_heatmap,model)
+    Total+=Total_Lights
+    Rec+=Recognized
+    Fal+=Falsepos
+    count+=1
+    print "Time taken to process the frame: ", total_time, " s"
+    # Two subplots, the axes array is 1-d
 
-contours, thresh = red_thresh(processed_image, heatmap) # Performs red thresholding on HSV Space, draws BBs over the contours
-accepted, annotated_image = heuristics(contours, cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
-print "Stage2: Color Thresholding: ",time.time()-t," s"
+    axarr[0, 0].imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB), cmap=plt.gray())
+    axarr[0, 0].set_title('Original')
+    axarr[0, 1].imshow(heatmap, cmap=plt.gray())
+    axarr[0, 1].set_title('Heatmap')
+    axarr[1, 0].imshow(thresh, cmap=plt.gray())
+    axarr[1, 0].set_title('Thresholded')
+    axarr[1, 1].imshow(final_annotated_image, cmap=plt.gray())
+    axarr[1, 1].set_title('Final Annotations')
 
-t=time.time()
+    #plt.tight_layout() # optional
+    #plt.show()
+
+    plt.pause(0.05)
+
+    print "Average Accuracy: ", Rec*1.0/(Total)
+    print "Average Precision", Rec*1.0/(Rec+Fal)
+    f.write(str(Rec/(Rec+Fal))+"   "+str(Rec/(Total))+"\n")
 
 
-# Visualize
 
-
-#print np.shape(gray_image)
-#print np.shape(heatmap)
-
-
-
-D=OrderedDict({"1) Original":cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB),"2) Heatmap":heatmap,"3) Color Thresholded":thresh, "5) Annotated Image":annotated_image})
-
-
-plot_figures(D,2,2)
-
+f.close()

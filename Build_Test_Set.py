@@ -45,16 +45,8 @@ for d in dirs:
 
 
 
-print "No of images: ",len(Images.keys())
-
-Test={}
-
-keys=random.sample( Images.keys(), 1000 )
 
 
-for key in keys:
-    Test[key]=Images[key]
-
-pickle.dump( Test, open( "validation_set.p", "wb" ) )
+pickle.dump( Images, open( "validation_set.p", "wb" ) )
 
 
