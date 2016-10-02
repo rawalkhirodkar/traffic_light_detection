@@ -22,36 +22,29 @@ def red_thresh(img,heatmap):
     cv2.medianBlur(img,7)
 
     ret,thresh = cv2.threshold(img,127,255,0)
-    temp_thresh = thresh
-    # print("heatmap:",np.shape(heatmap), "img:", np.shape(thresh), type(heatmap), type(thresh))
     heatmap = np.asarray(heatmap,dtype=np.uint8) 
-    thresh = cv2.bitwise_and(thresh,heatmap)
-    temp_thresh2 = cv2.bitwise_and(temp_thresh,heatmap)
-    contours, hierarchy = cv2.findContours(thresh,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-    return contours,temp_thresh2
+    thresh_and_heatmap = cv2.bitwise_and(thresh,heatmap)
+    contours, hierarchy = cv2.findContours(thresh_and_heatmap,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+    return contours,thresh_and_heatmap
 
 
 
-def heuristics(contours, original_img):
+def heuristics(contours, original_img, min_area, min_red_density):
 
     annotated_image=original_img.copy()
-
-    rejected=[]
     accepted=[]
     for cnt in contours:
         area = cv2.contourArea(cnt)
         x,y,w,h = cv2.boundingRect(cnt)
         perimeter = cv2.arcLength(cnt, True)
         approx = cv2.approxPolyDP(cnt, 0.04 * perimeter, True)
-        fraction = 0.1
-        pad=int(fraction*w*h)
-        temp=original_img[y:y+2*h,x-pad/3:x+h+pad/3]
-        if area>20 and len(approx) > 3 and area*2.5 > w*h and w < 2 * h and h < 5 * w:
+        red_density = (area*1.0)/(w*h)
+        width_height_ratio = (w*1.0)/h
+        if area>min_area and len(approx) > 3 and red_density > min_red_density and width_height_ratio < 1.5 and width_height_ratio > 0.33:
             accepted.append(cnt)
-            cv2.rectangle(annotated_image, (x,y), (x+w,y+h),(0,255,0), 2)
+            cv2.rectangle(annotated_image, (x,y), (x+w,y+h),(0,255,0), 2) #actual candidates in green
         else:
-            rejected.append(temp)
-            cv2.rectangle(annotated_image, (x,y), (x+w,y+h),(0,0,255), 2)
+            cv2.rectangle(annotated_image, (x,y), (x+w,y+h),(0,0,255), 2) #rejects in blue
     return accepted,annotated_image
 
 

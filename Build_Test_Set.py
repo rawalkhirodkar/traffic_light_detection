@@ -4,15 +4,11 @@ import random
 import copy
 import os
 import pickle
+import collections
+
 # Build a validation set for testing and store it in a pickle file
 
 print "Reading dataset..."
-
-
-
-
-
-
 
 
 Images={}
@@ -32,10 +28,13 @@ for d in dirs:
             filename="dayTrain/"+d+"/frames/"+i[0][12:len(i[0])]
             tmp=cv2.imread(filename)
             print filename
+            
+            #left corner X;Upper left corner Y;Lower right corner X;Lower right corner Y
             try:
                 Images[filename].append([int(i[2]),int(i[3]),int(i[4]),int(i[5])])
             except:
                 Images[filename]=[[int(i[2]),int(i[3]),int(i[4]),int(i[5])]]
+
             #print np.shape(Images[i[0]][0])
             #cv2.rectangle(tmp, (int(i[2]),int(i[3])), (int(i[4]),int(i[5])),(255,0,0), 2)
             #cv2.imshow("gg",tmp)
@@ -43,10 +42,7 @@ for d in dirs:
         #if random.random()<=0.01:
         #    break
 
-
-
-
-
-pickle.dump( Images, open( "validation_set.p", "wb" ) )
+od = collections.OrderedDict(sorted(Images.items()))
+pickle.dump( od, open( "validation_set.p", "wb" ) )
 
 

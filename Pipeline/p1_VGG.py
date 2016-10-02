@@ -25,17 +25,11 @@ def generate_heatmap(filename,model_heatmap,ids,width,height,thresh):
         out_heatmap = model_heatmap.predict(im_heatmap)
         heatmap = out_heatmap[0,ids].sum(axis=0)
         
-        # print("heatmap:",np.shape(heatmap)) 
-        # print(heatmap)
         my_range = np.max(heatmap) - np.min(heatmap)
         heatmap = heatmap / my_range
-        heatmap = heatmap * 255
-        # print(heatmap)
-        
+        heatmap = heatmap * 255        
         
         heatmap = cv2.resize(heatmap,(width,height))
-        # cv2.imshow("heatmap1",heatmap)
-
 
         heatmap[heatmap < thresh] = 0    # Black
         heatmap[heatmap >= thresh] = 255 # White
