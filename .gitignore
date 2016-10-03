@@ -1,6 +1,6 @@
 *.h5
 /dayTrain
 /Pipeline/SVC_Classifier
-/dayTest
-/neg_neural
-/pos_neural
+/Build_Dataset
+/Neural_Net
+*.pyc

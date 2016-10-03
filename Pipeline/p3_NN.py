@@ -21,5 +21,4 @@ def NN(accepted_contours,annotated_image,original_image,model):
 
         except:
             pass
-
     return classifier_results, annotated_image

@@ -55,13 +55,9 @@ def ret_area(a, b):  # return area overlap of two rectangles, returns 0 if recta
     return dx*dy
 
 
-
-
 def run_pipeline(filename,BBs,ids,model_heatmap,model,red_density):
     st=time.time()
     accepted=[]
-
-
     # Initialization
 
     filename="../"+filename
@@ -127,6 +123,7 @@ def run_pipeline(filename,BBs,ids,model_heatmap,model,red_density):
                     break
         i += 1
 
+
     false_pos = predicted_pos - true_pos
     precision = 0
     recall = 0
@@ -140,6 +137,8 @@ def run_pipeline(filename,BBs,ids,model_heatmap,model,red_density):
     print "Frame Precision: ", precision
     print "Frame Recall", recall
     # Visualize
+    txt="(TP,FP,LIGHTS):" +str(true_pos)+","+str(false_pos)+","+str(total_lights)
+    cv2.putText(annotated_image,txt, (100,100), cv2.FONT_HERSHEY_SIMPLEX, 1, 4)
 
     D=OrderedDict({"1) Original":cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB),"2) Heatmap":heatmap,"3) Color Thresholded":thresh, "4) Annotated Image":final_annotated_image})
 

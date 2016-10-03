@@ -3,10 +3,15 @@ from p1_VGG import *
 import pickle
 import matplotlib.pyplot as plt
 
-Test = pickle.load( open( "validation_set.p", "rb" ) )
+#Test = pickle.load( open( "validation_set.p", "rb" ) )
+Test = pickle.load( open( "/home/samiran/TRI/Build_Dataset/testing_links.p", "rb" ) )
+
+
+#Unset this to turn off visualization
+Vis=0
 
 #Set this to see the final image full screen
-full_image = 0
+full_image = 1
 image_count = 10
 g = open("time.csv","w")
 g.write("count,avg_latency,precision,recall\n")
@@ -15,7 +20,7 @@ g.close
 f=open("stats.csv","w")
 f.write("")
 f.close
-f=open("stats.csv","a+")
+res=open("stats.csv","a+")
 g=open("time.csv","a+")
 
 
@@ -72,9 +77,12 @@ avg_latency = 0
 count = 0
 
 red_density = 0.4
-print len(Test.keys())
+Total_images=len(Test.keys())
 
+it=1
 for i in Test.keys():
+    print "Processing image ",it,"/",Total_images
+    it+=1
     print("")
     total_time, original_image,heatmap,thresh,final_annotated_image,total_lights,true_pos,false_pos=run_pipeline(i,Test[i],ids,model_heatmap,model,red_density)
     overall_lights+=total_lights
@@ -94,7 +102,7 @@ for i in Test.keys():
         print"Avg. Precision:",precision, " Avg. Recall:", recall
         g.write(str(count) +","+ str(avg_latency)+","+str(precision)+","+str(recall)+"\n")
     
-    if(full_image == 0):
+    if(full_image == 0) and Vis!=0:
         # Two subplots, the axes array is 1-d
         axarr[0, 0].imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB), cmap=plt.gray())
         axarr[0, 0].set_title('Original')
@@ -104,14 +112,14 @@ for i in Test.keys():
         axarr[1, 0].set_title('Thresholded')
         axarr[1, 1].imshow(final_annotated_image, cmap=plt.gray())
         axarr[1, 1].set_title('Final Annotations')
-        plt.pause(0.001)
+        plt.pause(2)
 
-    else:
+    elif Vis!=0:
          plt.imshow(final_annotated_image)
-         plt.pause(0.001)    
+         plt.pause(10)    
     count += 1
-    if(count > image_count):
-        break
+    #if(count > image_count):
+    #    break
 
 avg_latency = (total_latency*1.0)/(count-1)
 precision = (overall_true_pos*1.0)/(overall_true_pos+overall_false_pos)
@@ -124,9 +132,10 @@ print("")
 print "Avg. Latency:", avg_latency
 print"Avg. Precision:",precision, " Avg. Recall:", recall, "F1 Score:", f1_score
 
-f.write("red_density,precision,recall,F1_score,TP,FP,tot_lights\n")
-f.write(str(red_density) +","+ str(precision)+","+str(recall)+","+str(f1_score)+
+
+res.write("red_density,precision,recall,F1_score,TP,FP,tot_lights\n")
+res.write(str(red_density) +","+ str(precision)+","+str(recall)+","+str(f1_score)+
     ","+str(overall_true_pos) +","+ str(overall_false_pos)+","+str(overall_lights)+"\n")
 
-f.close()
+res.close()
 g.close()
