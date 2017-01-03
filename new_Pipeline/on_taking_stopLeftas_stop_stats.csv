@@ -1,2 +1,0 @@
-red_density,precision,recall,F1_score,TP,FP,tot_lights
-0.4,0.792884371029,0.55751619388,0.65468852459,2496,652,4477
